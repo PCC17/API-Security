@@ -29,16 +29,37 @@ function checkUserData($user, $p){
     return false;
 }
 
-function storeToken($user, $token, $expireDays){
+function storeToken($user, $token, $expireDays)
+{
     global $db;
     $id = getId($user);
-    $sql = "INSERT INTO `tokens` (`user_id`, `token`, `creation_date`, `expire_date`) VALUES (".$id.", '".$token."', CURRENT_TIMESTAMP, DATE_ADD(NOW(), INterval ".$expireDays." day))";
+
+    $array = array("success" => 0, "userid" => $id, "token" => "null");
+
+
+    $sql = "DELETE FROM `tokens` WHERE `user_id`=".$id;
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+
+    $sql = "INSERT INTO `tokens` (`user_id`, `token`, `creation_date`, `expire_date`) VALUES (" . $id . ", '" . $token . "', CURRENT_TIMESTAMP, DATE_ADD(NOW(), INterval " . $expireDays . " day))";
     $stmt = $db->prepare($sql);
     $res = $stmt->execute();
 
-    if($res == true)
-        return array("success"=>1, "userid"=>$id, "token"=>$token);
-    else
-        return array("success"=>0, "userid"=>$id, "token"=>"null");
+    if ($res == true) {
+        $array["success"] = 1;
+        $array["token"]=$token;
+    }
+    return $array;
 }
-?>
+
+function verifyToken($user, $token){
+    global $db;
+    $sql = "SELECT token FROM tokens WHERE user_id='" . $user . "'";
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if($result["token"]==$token)
+        return true;
+    return false;
+}
