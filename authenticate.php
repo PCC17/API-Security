@@ -7,11 +7,16 @@
  */
 require ("dbaccess.php");
 
-$userid = $_GET["id"];
-$token = $_GET["token"];
+$userid = $_POST["id"];
+$token = $_POST["token"];
 
 if(verifyToken($userid, $token))
 {
+    json_encode(array("success"=>1));
+}
+else
+{
+    json_encode(array("success"=>0));
 }
 
 
