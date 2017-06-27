@@ -11,26 +11,30 @@ require ("dbaccess.php");
 $tokenLength = 64;
 $expireDays = 7;
 
-$user = $_GET["user"];
-$password = $_GET["password"];
+$user = $_POST["user"];
+$password = $_POST["password"];
 
 $res = checkUserData($user, $password);
-
 if($res == 1) {
-    echo json_encode(generateToken($user, $expireDays, $tokenLength));
+    echo json_encode(generateToken($user));
+}
+else
+{
+    echo json_encode(array("success" => 0));
 }
 
-function generateToken($user, $expireDays, $tokenLength) {
-    global $tokenLength;
-    $token = hash('sha256',generateRandomToken($tokenLength).$user);
-    return storeToken($user, $token, $expireDays);
+function generateToken($user) {
+    global $tokenLength, $expireDays;
+    $token = hash('sha256',generateRandomString($tokenLength).$user);
+    $userIdentifier = hash('sha256',generateRandomString($tokenLength).$user);
+    return storeToken($user, $userIdentifier, $token, $expireDays);
 }
 
-function generateRandomToken($tokenLength) {
+function generateRandomString($length) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
     $charactersLength = strlen($characters);
     $randomString = '';
-    for ($i = 0; $i < $tokenLength; $i++) {
+    for ($i = 0; $i < $length; $i++) {
         $randomString .= $characters[rand(0, $charactersLength - 1)];
     }
     return $randomString;

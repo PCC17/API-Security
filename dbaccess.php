@@ -6,7 +6,7 @@
  * Time: 17:17
  */
 
- $db = new PDO('mysql:host=localhost;dbname=apisecurity', "root", "");
+ $db = new PDO('mysql:host=localhost;dbname=apisecurity', "root", "root");
 
  function getId($user){
      global $db;
@@ -24,24 +24,24 @@ function checkUserData($user, $p){
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if($result["password"]==hash('sha256', $p))
+    if(strtolower($result["password"])==strtolower(hash('sha256', $p)))
         return true;
     return false;
 }
 
-function storeToken($user, $token, $expireDays)
+function storeToken($user, $userIdentifier, $token, $expireDays)
 {
     global $db;
     $id = getId($user);
 
-    $array = array("success" => 0, "userid" => $id, "token" => "null");
+    $array = array("success" => 0, "user_identifier" => $userIdentifier, "token" => "null");
 
 
     $sql = "DELETE FROM `tokens` WHERE `user_id`=".$id;
     $stmt = $db->prepare($sql);
     $stmt->execute();
 
-    $sql = "INSERT INTO `tokens` (`user_id`, `token`, `creation_date`, `expire_date`) VALUES (" . $id . ", '" . $token . "', CURRENT_TIMESTAMP, DATE_ADD(NOW(), INterval " . $expireDays . " day))";
+    $sql = "INSERT INTO `tokens` (`user_id`, `user_identifier`, `token`, `creation_date`, `expire_date`) VALUES (" . $id . ", '" . $userIdentifier . "', '" . $token . "', CURRENT_TIMESTAMP, DATE_ADD(NOW(), INterval " . $expireDays . " day))";
     $stmt = $db->prepare($sql);
     $res = $stmt->execute();
 
@@ -52,9 +52,9 @@ function storeToken($user, $token, $expireDays)
     return $array;
 }
 
-function verifyToken($user, $token){
+function verifyToken($userIdentifier, $token){
     global $db;
-    $sql = "SELECT token FROM tokens WHERE user_id='" . $user . "'";
+    $sql = "SELECT token FROM tokens WHERE user_identifier='" . $userIdentifier . "'";
     $stmt = $db->prepare($sql);
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
